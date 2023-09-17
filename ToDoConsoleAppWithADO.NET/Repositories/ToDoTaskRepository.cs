@@ -81,9 +81,7 @@ Join TaskStatuses ts on t.[Id] = ts.[TaskId]";
         {
             using (SqlCommand command = new SqlCommand(insertPrioritiesCommandText, connection))
             {
-                if (command.ExecuteNonQuery() > 0)
-                    succes = true;
-                else
+                if (command.ExecuteNonQuery() == -1)
                     succes = false;
             }
 
@@ -91,9 +89,7 @@ Join TaskStatuses ts on t.[Id] = ts.[TaskId]";
             {
                 using (SqlCommand command = new SqlCommand(insertTaskStatusesCommandText, connection))
                 {
-                    if (command.ExecuteNonQuery() > 0)
-                        succes = true;
-                    else
+                    if (command.ExecuteNonQuery() == -1)
                         succes = false;
                 }
             }
@@ -102,19 +98,45 @@ Join TaskStatuses ts on t.[Id] = ts.[TaskId]";
         return succes;
     }
 
-    //public void UpdateTask(ToDoTask newTasks)
-    //{
-    //    var commantText = $"Update ";
-    //}
+    public bool UpdateTask(string tempUpdate, int tempUpdateId, string tempUpdateText)
+    {
+        var commantText = $"Update {tempUpdate} Set [Name] = '{tempUpdateText}' Where [Id] = {tempUpdateId}";
+        using (var command = new SqlCommand(commantText, connection))
+            return command.ExecuteNonQuery() > 0;
+    }
 
     public bool DeleteTask(int id)
     {
-        var commandText = $"Delete from Tasks Where [Id] = ({id})";
+        var DeleteTaskStatusesCommandText = $"Delete from TaskStatuses Where [TaskId] = ({id})";
+        var DeletePrioritiesCommandText = $"Delete from Priorities Where [TaskId] = ({id})";
+        var DeleteTasksCommandText = $"Delete from Tasks Where [Id] = ({id})";
 
-        using (SqlCommand command = new SqlCommand(commandText, connection))
+        bool succes = false;
+        using (SqlCommand command = new SqlCommand(DeleteTaskStatusesCommandText, connection))
         {
-            return command.ExecuteNonQuery() > 0;
+            if (command.ExecuteNonQuery() > 0)
+                succes = true;
         }
+
+        if (succes)
+        {
+            using (SqlCommand command = new SqlCommand(DeletePrioritiesCommandText, connection))
+            {
+                if (command.ExecuteNonQuery() == -1)
+                    succes = false;
+            }
+
+            if (succes)
+            {
+                using (SqlCommand command = new SqlCommand(DeleteTasksCommandText, connection))
+                {
+                    if (command.ExecuteNonQuery() == -1)
+                        succes = false;
+                }
+            }
+        }
+
+        return succes;
     }
 }
 
